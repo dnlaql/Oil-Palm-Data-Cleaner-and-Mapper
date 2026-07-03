@@ -104,7 +104,6 @@ elif st.session_state.page == "Dashboard Page":
     with col_header:
         st.title("📊 Estate Spatial Mapping Analytics Dashboard")
     with col_nav:
-        st.markdown("<br>", unsafe_allowed_html=True)
         if st.button("🔄 Upload New File", use_container_width=True):
             st.session_state.page = "Upload Page"
             st.session_state.cleaned_df = None
