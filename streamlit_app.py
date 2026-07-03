@@ -6,7 +6,11 @@ import plotly.express as px
 import time
 
 # Set page layout to wide for dashboard optimization
-st.set_page_config(page_title="Oil Palm Data Cleaner & Mapper", layout="wide")
+st.set_page_config(
+    page_title="🌴 Oil Palm Estate Data Preprocessing & Mapping System", 
+    layout="wide",
+    page_icon="🌴"
+)
 
 # Initialize session state variables for page navigation and data storage
 if "page" not in st.session_state:
