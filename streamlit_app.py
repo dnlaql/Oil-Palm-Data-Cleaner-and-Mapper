@@ -95,7 +95,7 @@ if st.session_state.page == "Upload Page":
                 st.error(f"Error parsing file layout: {e}")
 
 # ==============================================================================
-# PAGE 2: CLEANED DATASET & DASHBOARD (TOUCHED UP & ORGANIZED)
+# PAGE 2: CLEANED DATASET & DASHBOARD
 # ==============================================================================
 elif st.session_state.page == "Dashboard Page":
     
@@ -190,10 +190,10 @@ elif st.session_state.page == "Dashboard Page":
                 
                 st.pyplot(fig_2d)
                 
-            # --- TAB 2: 3D INTERACTIVE PLOTLY VIEW (UPDATED TO FLAT FLOATING MATRIX) ---
+            # --- TAB 2: 3D INTERACTIVE PLOTLY VIEW (FLAT & SPACED OUT) ---
             with tab2:
                 st.markdown("#### Dynamic 3D Tree Matrix Map")
-                st.caption("💡 **Interactivity Tip:** Left-click and drag to rotate the view. Right-click to pan. Scroll up/down to zoom in on individual nodes.")
+                st.caption("💡 **Interactivity Tip:** Left-click and drag to rotate the view. Scroll up/down to zoom in on individual nodes.")
                 
                 # Set height (Z-axis) to a flat baseline 0 to prevent artificial hills
                 df_clean["Height (Z)"] = 0 
@@ -216,12 +216,14 @@ elif st.session_state.page == "Dashboard Page":
                     hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
                 )
 
-                # Adjusted Layout configs with hidden Z grid markings for layout optimization
+                # Aspect ratio added to manually space out the X and Y coordinates in 3D space
                 fig_3d.update_layout(
                     scene=dict(
                         xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
                         yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
                         zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", showticklabels=False, title=""),
+                        aspectmode="manual",
+                        aspectratio=dict(x=1, y=1, z=0.3)  # Adjust the 'z' value here if you want it more flat or tall!
                     ),
                     margin=dict(r=0, l=0, b=0, t=10),
                     height=600
