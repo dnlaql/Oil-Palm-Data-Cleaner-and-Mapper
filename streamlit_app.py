@@ -165,17 +165,16 @@ elif st.session_state.page == "Dashboard Page":
                 hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
             )
 
-            # Match layout styling & invert Y-axis so Row 1 sits correctly at the top front
-fig_3d.update_layout(
-    scene=dict(
-        xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-        yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"), # Fixed spelling here!
-        zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-    ),
-    margin=dict(r=0, l=0, b=0, t=30),
-    height=550
-)
-           
+            # FIXED: Properly indented this entire block to stay inside the 'if' condition
+            fig_3d.update_layout(
+                scene=dict(
+                    xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                    yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
+                    zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                ),
+                margin=dict(r=0, l=0, b=0, t=30),
+                height=550
+            )
             
             # Render the 3D plot smoothly into Streamlit
             st.plotly_chart(fig_3d, use_container_width=True)
