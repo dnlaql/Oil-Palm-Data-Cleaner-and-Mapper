@@ -166,15 +166,15 @@ elif st.session_state.page == "Dashboard Page":
             )
             
             # Match layout styling & invert Y-axis so Row 1 sits correctly at the top front
-            fig_3d.update_layout(
-                scene=dict(
-                    xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-                    yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reverse"),
-                    zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-                ),
-                margin=dict(r=0, l=0, b=0, t=30),
-                height=550
-            )
+fig_3d.update_layout(
+    scene=dict(
+        xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+        yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reverse"), # <-- CHANGE THIS
+        zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+    ),
+    margin=dict(r=0, l=0, b=0, t=30),
+    height=550
+)
             
             # Render the 3D plot smoothly into Streamlit
             st.plotly_chart(fig_3d, use_container_width=True)
