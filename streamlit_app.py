@@ -2,10 +2,10 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import plotly.express as px  # Moved to the top to fix the syntax error
+import plotly.express as px  
 import time
 
-# Set page layout
+# Set page layout to wide for dashboard optimization
 st.set_page_config(page_title="Oil Palm Data Cleaner & Mapper", layout="wide")
 
 # Initialize session state variables for page navigation and data storage
@@ -43,7 +43,6 @@ if st.session_state.page == "Upload Page":
     )
     
     if uploaded_file is not None:
-        # Visual loading spinner before forwarding
         with st.spinner("🤖 Preprocessing engine active... Cleaning data matrix and calculating coordinates..."):
             try:
                 # Read raw excel matrix
@@ -96,14 +95,15 @@ if st.session_state.page == "Upload Page":
                 st.error(f"Error parsing file layout: {e}")
 
 # ==============================================================================
-# PAGE 2: CLEANED DATASET & DASHBOARD
+# PAGE 2: CLEANED DATASET & DASHBOARD (TOUCHED UP & ORGANIZED)
 # ==============================================================================
 elif st.session_state.page == "Dashboard Page":
     
-    # Navigation header back button
+    # Top Header & Navigation Banner
     col_header, col_nav = st.columns([5, 1])
     with col_header:
         st.title("📊 Estate Spatial Mapping Analytics Dashboard")
+        st.caption("Successfully processed layout file. Explore the mapped nodes and download data summaries below.")
     with col_nav:
         st.write("") 
         if st.button("🔄 Upload New File", use_container_width=True):
@@ -119,14 +119,20 @@ elif st.session_state.page == "Dashboard Page":
     total_trees = st.session_state.total_trees
     df_summary = df_clean[["PALM NO.", "LOCATION"]]
     
-    # Main grid layout splits
-    col_stats, col_viz = st.columns([1, 2])
+    # Split the screen into two structural halves: Controls/Table (Left) vs Layout Visualization (Right)
+    col_stats, col_viz = st.columns([1, 2], gap="large")
     
-    # --- KPI Metrics & Tables Column ---
+    # --------------------------------------------------------------------------
+    # LEFT SIDEBAR COLUMN: METRICS, DOWNLOADS & TABLES
+    # --------------------------------------------------------------------------
     with col_stats:
-        st.markdown("### 📈 Key Summary Metrics")
+        st.subheader("📋 Data Controls & Summary")
+        st.markdown("Review the summarized tree allocations and export the clean tabular schema.")
+        
+        # Total Tree KPI Card
         st.metric(label="Total Unique Planted Trees Identified", value=f"{total_trees} Palms")
         
+        # Download Action Button
         csv_data = df_summary.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Clean Summary (CSV)",
@@ -136,48 +142,90 @@ elif st.session_state.page == "Dashboard Page":
             use_container_width=True
         )
         
-        st.markdown("### 📋 Filtered Dataset View")
-        st.dataframe(df_summary, height=430, use_container_width=True)
+        st.markdown("<br>", unsafe_allowed_html=False)
+        st.markdown("#### 🔍 Filtered Dataset View")
+        st.dataframe(df_summary, height=400, use_container_width=True)
         
-    # --- Interactive 3D Spatial Matrix Visualization Column ---
+    # --------------------------------------------------------------------------
+    # RIGHT SIDEBAR COLUMN: ORGANIZED VISUALIZATIONS (2D & 3D TABS)
+    # --------------------------------------------------------------------------
     with col_viz:
-        st.markdown("### 🗺️ Interactive 3D Tree Matrix Mapping Layout")
-        st.caption("💡 Click and drag inside the chart to rotate the estate field in 3D space! Scroll to zoom.")
+        st.subheader("🗺️ Estate Layout Visualizations")
+        st.markdown("Toggle between the specialized **2D Plot Layout Matrix** or the **Interactive 3D Network Layer** views.")
         
         if not df_clean.empty:
-            # Create a height (Z-axis) surface layer matching the Palm Numbers
-            df_clean["Height (Z)"] = df_clean["PALM NO."] 
+            # Setting up tabs to organize the 2D and 3D views beautifully
+            tab1, tab2 = st.tabs(["📈 2D Matrix Layout View", "🎛️ Interactive 3D Terrain View"])
             
-            # Generate 3D Scatter Plot using Plotly
-            fig_3d = px.scatter_3d(
-                df_clean,
-                x="Col_Num",
-                y="Row_Num",
-                z="Height (Z)",
-                color="Height (Z)",
-                color_continuous_scale="Viridis",  # Beautiful green-to-blue gradient
-                labels={
-                    "Col_Num": "Column (X)",
-                    "Row_Num": "Row (Y)",
-                    "Height (Z)": "Palm ID Elevation (Z)"
-                },
-                hover_name="LOCATION",
-                hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
-            )
+            # --- TAB 1: 2D MATPLOTLIB SCATTER VIEW ---
+            with tab1:
+                st.markdown("#### Spatial Field Layout Matrix")
+                st.caption("A clean bird's-eye view tracking active coordinate nodes across your field blocks.")
+                
+                max_c = df_clean["Col_Num"].max()
+                max_r = df_clean["Row_Num"].max()
+                
+                fig_2d, ax = plt.subplots(figsize=(12, 7.5))
+                
+                # Plot 2D coordinates
+                ax.scatter(
+                    df_clean["Col_Num"], 
+                    df_clean["Row_Num"], 
+                    color="#2E7D32", 
+                    s=40, 
+                    alpha=0.85, 
+                    edgecolors='none'
+                )
+                
+                # Flip Y axis so Row 1 starts from top visually
+                ax.set_ylim(max_r + 2, -1)
+                ax.set_xlim(-1, max_c + 2)
+                
+                ax.set_xlabel("Columns (Coordinate Vectors)", fontsize=10, fontweight='bold')
+                ax.set_ylabel("Rows (Coordinate Vectors)", fontsize=10, fontweight='bold')
+                
+                ax.grid(True, linestyle=":", alpha=0.4, color="gray")
+                ax.set_facecolor("#FAFAFA")
+                
+                st.pyplot(fig_2d)
+                
+            # --- TAB 2: 3D INTERACTIVE PLOTLY VIEW ---
+            with tab2:
+                st.markdown("#### Dynamic 3D Tree Matrix Map")
+                st.caption("💡 **Interactivity Tip:** Left-click and drag to rotate the view. Right-click to pan. Scroll up/down to zoom in on individual nodes.")
+                
+                # Create a height (Z-axis) surface layer matching the Palm Numbers
+                df_clean["Height (Z)"] = df_clean["PALM NO."] 
+                
+                # Generate 3D Scatter Plot using Plotly
+                fig_3d = px.scatter_3d(
+                    df_clean,
+                    x="Col_Num",
+                    y="Row_Num",
+                    z="Height (Z)",
+                    color="Height (Z)",
+                    color_continuous_scale="Viridis",
+                    labels={
+                        "Col_Num": "Column (X)",
+                        "Row_Num": "Row (Y)",
+                        "Height (Z)": "Palm ID Elevation (Z)"
+                    },
+                    hover_name="LOCATION",
+                    hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
+                )
 
-            # FIXED: Properly indented this entire block to stay inside the 'if' condition
-            fig_3d.update_layout(
-                scene=dict(
-                    xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-                    yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
-                    zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
-                ),
-                margin=dict(r=0, l=0, b=0, t=30),
-                height=550
-            )
-            
-            # Render the 3D plot smoothly into Streamlit
-            st.plotly_chart(fig_3d, use_container_width=True)
-            
+                # Adjusted Layout configs to fit nicely inside the Streamlit container
+                fig_3d.update_layout(
+                    scene=dict(
+                        xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                        yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
+                        zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                    ),
+                    margin=dict(r=0, l=0, b=0, t=10),
+                    height=600
+                )
+                
+                st.plotly_chart(fig_3d, use_container_width=True)
+                
         else:
-            st.warning("Data tracking parameters parsed empty.")
+            st.warning("Processed dataset parsed empty. No mapping assets to display.")
