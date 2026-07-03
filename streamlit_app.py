@@ -231,3 +231,30 @@ elif st.session_state.page == "Dashboard Page":
                 
         else:
             st.warning("Processed dataset parsed empty. No mapping assets to display.")
+
+# ==============================================================================
+# SYSTEM FOOTER & DISCLAIMER
+# ==============================================================================
+st.markdown("---")
+
+# Layout split for credits and legal disclaimer
+col_credits, col_disclaimer = st.columns([1, 2], gap="large")
+
+with col_credits:
+    st.markdown("#### 💡 System Credits")
+    st.markdown("""
+    * **Idea & Conceptualization:** Saidatina Nurfarahanim
+    * **Development & Engineering:** Muhammad Daniel Aqil
+    """)
+    st.caption("© 2026 All Rights Reserved. Oil Palm Estate Data Engine.")
+
+with col_disclaimer:
+    st.markdown("#### ⚖️ Legal Disclaimer")
+    st.caption("""
+    This software utility is provided "as is" for automated spatial cleaning, coordinate transformation, 
+    and interactive 2D/3D visualization of agricultural grid matrices. The developer and conceptualizer 
+    assume no liability for operational field anomalies, surveying errors, or data inaccuracies resulting 
+    from faulty structural formats within the user's uploaded Excel matrix templates. Users are highly 
+    encouraged to cross-verify physical tree tags against output coordinates before committing resources 
+    to field operations.
+    """)
