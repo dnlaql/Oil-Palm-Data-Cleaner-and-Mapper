@@ -94,16 +94,20 @@ if st.session_state.page == "Upload Page":
             except Exception as e:
                 st.error(f"Error parsing file layout: {e}")
 
+# Ensure you add this import at the very top of your file
+import plotly.express as px
+
 # ==============================================================================
 # PAGE 2: CLEANED DATASET & DASHBOARD
 # ==============================================================================
 elif st.session_state.page == "Dashboard Page":
     
-    # Navigation header back button to let user upload a new file if needed
+    # Navigation header back button
     col_header, col_nav = st.columns([5, 1])
     with col_header:
         st.title("📊 Estate Spatial Mapping Analytics Dashboard")
     with col_nav:
+        st.write("") 
         if st.button("🔄 Upload New File", use_container_width=True):
             st.session_state.page = "Upload Page"
             st.session_state.cleaned_df = None
@@ -115,8 +119,6 @@ elif st.session_state.page == "Dashboard Page":
     # Retrieve data from session state memory
     df_clean = st.session_state.cleaned_df
     total_trees = st.session_state.total_trees
-    
-    # Separate columns out to match requirements perfectly
     df_summary = df_clean[["PALM NO.", "LOCATION"]]
     
     # Main grid layout splits
@@ -125,10 +127,8 @@ elif st.session_state.page == "Dashboard Page":
     # --- KPI Metrics & Tables Column ---
     with col_stats:
         st.markdown("### 📈 Key Summary Metrics")
-        # Requirement 4: Total of Tree
         st.metric(label="Total Unique Planted Trees Identified", value=f"{total_trees} Palms")
         
-        # Requirement 2: Summary Downloader (Palm No and Location)
         csv_data = df_summary.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Clean Summary (CSV)",
@@ -141,37 +141,46 @@ elif st.session_state.page == "Dashboard Page":
         st.markdown("### 📋 Filtered Dataset View")
         st.dataframe(df_summary, height=430, use_container_width=True)
         
-    # --- Requirement 3: Spatial Matrix Visualization Column ---
+    # --- Interactive 3D Spatial Matrix Visualization Column ---
     with col_viz:
-        st.markdown("### 🗺️ Entire Tree Matrix Mapping Layout")
+        st.markdown("### 🗺️ Interactive 3D Tree Matrix Mapping Layout")
+        st.caption("💡 Click and drag inside the chart to rotate the estate field in 3D space! Scroll to zoom.")
         
         if not df_clean.empty:
-            max_c = df_clean["Col_Num"].max()
-            max_r = df_clean["Row_Num"].max()
+            # Create a mock height (Z-axis) based on Palm Number or just an elegant fixed surface layer
+            # Using 'PALM NO.' as Z gives a cool terrain-like insight into numbering sequences
+            df_clean["Height (Z)"] = df_clean["PALM NO."] 
             
-            fig, ax = plt.subplots(figsize=(12, 7.5))
-            
-            # Scatter coordinates representing structural mapping vectors
-            ax.scatter(
-                df_clean["Col_Num"], 
-                df_clean["Row_Num"], 
-                color="#2E7D32", 
-                s=35, 
-                alpha=0.85, 
-                edgecolors='none'
+            # Generate 3D Scatter Plot using Plotly
+            fig_3d = px.scatter_3d(
+                df_clean,
+                x="Col_Num",
+                y="Row_Num",
+                z="Height (Z)",
+                color="Height (Z)",
+                color_continuous_scale="Viridis",  # Beautiful green-to-blue gradient
+                labels={
+                    "Col_Num": "Column (X)",
+                    "Row_Num": "Row (Y)",
+                    "Height (Z)": "Palm ID Elevation (Z)"
+                },
+                hover_name="LOCATION",
+                hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
             )
             
-            # Flip Y axis so Row 1 starts from top visually matching standard crop field views
-            ax.set_ylim(max_r + 2, -1)
-            ax.set_xlim(-1, max_c + 2)
+            # Match layout styling & invert Y-axis so Row 1 sits correctly at the top front
+            fig_3d.update_layout(
+                scene=dict(
+                    xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                    yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reverse"),
+                    zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                ),
+                margin=dict(r=0, l=0, b=0, t=30),
+                height=550
+            )
             
-            ax.set_xlabel("Columns (Coordinate Vectors)", fontsize=10, fontweight='bold')
-            ax.set_ylabel("Rows (Coordinate Vectors)", fontsize=10, fontweight='bold')
-            ax.set_title(f"Field Mapping Network Node Layout — Total Nodes: {total_trees}", fontsize=11, fontweight='bold', pad=10)
+            # Render the 3D plot smoothly into Streamlit
+            st.plotly_chart(fig_3d, use_container_width=True)
             
-            ax.grid(True, linestyle=":", alpha=0.4, color="gray")
-            ax.set_facecolor("#FAFAFA")
-            
-            st.pyplot(fig)
         else:
             st.warning("Data tracking parameters parsed empty.")
