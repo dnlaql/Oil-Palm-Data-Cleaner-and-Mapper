@@ -142,7 +142,9 @@ elif st.session_state.page == "Dashboard Page":
             use_container_width=True
         )
         
-        st.markdown("<br>", unsafe_allowed_html=False)
+        # FIXED: Changed line break to a clean empty markdown block to bypass the invalid parameter bug
+        st.markdown("")
+        
         st.markdown("#### 🔍 Filtered Dataset View")
         st.dataframe(df_summary, height=400, use_container_width=True)
         
