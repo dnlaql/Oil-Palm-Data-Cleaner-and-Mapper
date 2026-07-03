@@ -142,7 +142,6 @@ elif st.session_state.page == "Dashboard Page":
             use_container_width=True
         )
         
-        # FIXED: Changed line break to a clean empty markdown block to bypass the invalid parameter bug
         st.markdown("")
         
         st.markdown("#### 🔍 Filtered Dataset View")
@@ -191,13 +190,13 @@ elif st.session_state.page == "Dashboard Page":
                 
                 st.pyplot(fig_2d)
                 
-            # --- TAB 2: 3D INTERACTIVE PLOTLY VIEW ---
+            # --- TAB 2: 3D INTERACTIVE PLOTLY VIEW (UPDATED TO FLAT FLOATING MATRIX) ---
             with tab2:
                 st.markdown("#### Dynamic 3D Tree Matrix Map")
                 st.caption("💡 **Interactivity Tip:** Left-click and drag to rotate the view. Right-click to pan. Scroll up/down to zoom in on individual nodes.")
                 
-                # Create a height (Z-axis) surface layer matching the Palm Numbers
-                df_clean["Height (Z)"] = df_clean["PALM NO."] 
+                # Set height (Z-axis) to a flat baseline 0 to prevent artificial hills
+                df_clean["Height (Z)"] = 0 
                 
                 # Generate 3D Scatter Plot using Plotly
                 fig_3d = px.scatter_3d(
@@ -205,23 +204,24 @@ elif st.session_state.page == "Dashboard Page":
                     x="Col_Num",
                     y="Row_Num",
                     z="Height (Z)",
-                    color="Height (Z)",
+                    color="PALM NO.",  # Color nodes beautifully by Palm ID index
                     color_continuous_scale="Viridis",
                     labels={
                         "Col_Num": "Column (X)",
                         "Row_Num": "Row (Y)",
-                        "Height (Z)": "Palm ID Elevation (Z)"
+                        "Height (Z)": "Base Level",
+                        "PALM NO.": "Palm ID"
                     },
                     hover_name="LOCATION",
                     hover_data={"PALM NO.": True, "Col_Num": False, "Row_Num": False, "Height (Z)": False}
                 )
 
-                # Adjusted Layout configs to fit nicely inside the Streamlit container
+                # Adjusted Layout configs with hidden Z grid markings for layout optimization
                 fig_3d.update_layout(
                     scene=dict(
                         xaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
                         yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
-                        zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray"),
+                        zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", showticklabels=False, title=""),
                     ),
                     margin=dict(r=0, l=0, b=0, t=10),
                     height=600
