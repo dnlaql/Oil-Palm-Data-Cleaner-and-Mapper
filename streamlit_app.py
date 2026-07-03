@@ -117,13 +117,12 @@ elif st.session_state.page == "Dashboard Page":
     # Retrieve data from session state memory
     df_clean = st.session_state.cleaned_df
     total_trees = st.session_state.total_trees
-    df_summary = df_clean[["PALM NO.", "LOCATION"]]
     
     # Split the screen into two structural halves: Controls/Table (Left) vs Layout Visualization (Right)
     col_stats, col_viz = st.columns([1, 2], gap="large")
     
     # --------------------------------------------------------------------------
-    # LEFT SIDEBAR COLUMN: METRICS, DOWNLOADS & TABLES
+    # LEFT SIDEBAR COLUMN: METRICS, FILTER, DOWNLOADS & TABLES
     # --------------------------------------------------------------------------
     with col_stats:
         st.subheader("📋 Data Controls & Summary")
@@ -132,10 +131,30 @@ elif st.session_state.page == "Dashboard Page":
         # Total Tree KPI Card
         st.metric(label="Total Unique Planted Trees Identified", value=f"{total_trees} Palms")
         
-        # Download Action Button
-        csv_data = df_summary.to_csv(index=False).encode('utf-8')
+        # --- NEW FEATURE: SEARCH / FILTER PALM NO. ---
+        st.markdown("#### 🔍 Search Filter")
+        search_query = st.text_input(
+            "Enter Palm No. (e.g., 10, 105) or leave blank to show all:",
+            key="palm_search"
+        ).strip()
+        
+        # Apply filtering logic based on input
+        if search_query:
+            try:
+                # Convert input to integer to match dataframe data type
+                search_val = int(search_query)
+                df_filtered = df_clean[df_clean["PALM NO."] == search_val]
+            except ValueError:
+                st.warning("Please enter a valid numeric Palm Number.")
+                df_filtered = df_clean.copy()
+        else:
+            df_filtered = df_clean.copy()
+            
+        # Download Action Button (Always exports the full data summary for convenience)
+        df_summary_full = df_clean[["PALM NO.", "LOCATION"]]
+        csv_data = df_summary_full.to_csv(index=False).encode('utf-8')
         st.download_button(
-            label="📥 Download Clean Summary (CSV)",
+            label="📥 Download Master Summary (CSV)",
             data=csv_data,
             file_name="cleaned_palm_summary.csv",
             mime="text/csv",
@@ -144,8 +163,10 @@ elif st.session_state.page == "Dashboard Page":
         
         st.markdown("")
         
-        st.markdown("#### 🔍 Filtered Dataset View")
-        st.dataframe(df_summary, height=400, use_container_width=True)
+        # Display either filtered or full dataframe
+        st.markdown(f"#### 📊 Table View ({len(df_filtered)} rows showing)")
+        df_display = df_filtered[["PALM NO.", "LOCATION"]]
+        st.dataframe(df_display, height=350, use_container_width=True)
         
     # --------------------------------------------------------------------------
     # RIGHT SIDEBAR COLUMN: ORGANIZED VISUALIZATIONS (2D & 3D TABS)
@@ -154,7 +175,7 @@ elif st.session_state.page == "Dashboard Page":
         st.subheader("🗺️ Estate Layout Visualizations")
         st.markdown("Toggle between the specialized **2D Plot Layout Matrix** or the **Interactive 3D Network Layer** views.")
         
-        if not df_clean.empty:
+        if not df_filtered.empty:
             # Setting up tabs to organize the 2D and 3D views beautifully
             tab1, tab2 = st.tabs(["📈 2D Matrix Layout View", "🎛️ Interactive 3D Terrain View"])
             
@@ -163,19 +184,20 @@ elif st.session_state.page == "Dashboard Page":
                 st.markdown("#### Spatial Field Layout Matrix")
                 st.caption("A clean bird's-eye view tracking active coordinate nodes across your field blocks.")
                 
+                # We calculate max values from master data to keep grid boundaries stable during filtering
                 max_c = df_clean["Col_Num"].max()
                 max_r = df_clean["Row_Num"].max()
                 
                 fig_2d, ax = plt.subplots(figsize=(12, 7.5))
                 
-                # Plot 2D coordinates
+                # Plot 2D coordinates (Uses df_filtered)
                 ax.scatter(
-                    df_clean["Col_Num"], 
-                    df_clean["Row_Num"], 
-                    color="#2E7D32", 
-                    s=40, 
-                    alpha=0.85, 
-                    edgecolors='none'
+                    df_filtered["Col_Num"], 
+                    df_filtered["Row_Num"], 
+                    color="#1B5E20" if search_query else "#2E7D32", # Change color slightly if filtered
+                    s=100 if search_query else 40,                  # Make node bigger if it is a specific search result
+                    alpha=1.0 if search_query else 0.85, 
+                    edgecolors='black' if search_query else 'none'
                 )
                 
                 # Flip Y axis so Row 1 starts from top visually
@@ -195,16 +217,16 @@ elif st.session_state.page == "Dashboard Page":
                 st.markdown("#### Dynamic 3D Tree Matrix Map")
                 st.caption("💡 **Interactivity Tip:** Left-click and drag to rotate the view. Scroll up/down to zoom in on individual nodes.")
                 
-                # Set height (Z-axis) to a flat baseline 0 to prevent artificial hills
-                df_clean["Height (Z)"] = 0 
+                # Ensure height (Z-axis) is a flat baseline 0
+                df_filtered["Height (Z)"] = 0 
                 
-                # Generate 3D Scatter Plot using Plotly
+                # Generate 3D Scatter Plot using Plotly (Uses df_filtered)
                 fig_3d = px.scatter_3d(
-                    df_clean,
+                    df_filtered,
                     x="Col_Num",
                     y="Row_Num",
                     z="Height (Z)",
-                    color="PALM NO.",  # Color nodes beautifully by Palm ID index
+                    color="PALM NO.",  
                     color_continuous_scale="Viridis",
                     labels={
                         "Col_Num": "Column (X)",
@@ -223,7 +245,7 @@ elif st.session_state.page == "Dashboard Page":
                         yaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", autorange="reversed"),
                         zaxis=dict(backgroundcolor="rgba(0,0,0,0)", gridcolor="lightgray", showticklabels=False, title=""),
                         aspectmode="manual",
-                        aspectratio=dict(x=1, y=1, z=0.3)  # Adjust the 'z' value here if you want it more flat or tall!
+                        aspectratio=dict(x=1, y=1, z=0.3)  
                     ),
                     margin=dict(r=0, l=0, b=0, t=10),
                     height=600
@@ -232,7 +254,7 @@ elif st.session_state.page == "Dashboard Page":
                 st.plotly_chart(fig_3d, use_container_width=True)
                 
         else:
-            st.warning("Processed dataset parsed empty. No mapping assets to display.")
+            st.warning("No matches found for the entered Palm Number. Please check your query.")
 
 # ==============================================================================
 # SYSTEM FOOTER & DISCLAIMER
