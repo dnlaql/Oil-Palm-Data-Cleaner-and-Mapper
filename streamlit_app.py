@@ -2,6 +2,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import plotly.express as px  # Moved to the top to fix the syntax error
 import time
 
 # Set page layout
@@ -94,9 +95,6 @@ if st.session_state.page == "Upload Page":
             except Exception as e:
                 st.error(f"Error parsing file layout: {e}")
 
-# Ensure you add this import at the very top of your file
-import plotly.express as px
-
 # ==============================================================================
 # PAGE 2: CLEANED DATASET & DASHBOARD
 # ==============================================================================
@@ -147,8 +145,7 @@ elif st.session_state.page == "Dashboard Page":
         st.caption("💡 Click and drag inside the chart to rotate the estate field in 3D space! Scroll to zoom.")
         
         if not df_clean.empty:
-            # Create a mock height (Z-axis) based on Palm Number or just an elegant fixed surface layer
-            # Using 'PALM NO.' as Z gives a cool terrain-like insight into numbering sequences
+            # Create a height (Z-axis) surface layer matching the Palm Numbers
             df_clean["Height (Z)"] = df_clean["PALM NO."] 
             
             # Generate 3D Scatter Plot using Plotly
